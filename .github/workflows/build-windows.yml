@@ -12,12 +12,12 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.12
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Locate JingcaiDesk V2.2 source
+      - name: Locate V2.2 source
         shell: pwsh
         run: |
           $apps = @(
@@ -31,7 +31,7 @@ jobs:
           )
 
           if ($apps.Count -ne 1) {
-            throw "Expected exactly one JingcaiDesk V2.2 app.py, found $($apps.Count)."
+            throw "Expected one V2.2 app.py, found $($apps.Count)"
           }
 
           $dir = $apps[0].Directory.FullName
@@ -39,9 +39,7 @@ jobs:
           "APP_DIR=$dir" |
             Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-          Write-Host "Application directory: $dir"
-
-      - name: Install Python dependencies
+      - name: Install PyInstaller
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
@@ -82,22 +80,9 @@ jobs:
             --hidden-import=tkinter `
             app.py
 
-      - name: Verify EXE
-        shell: pwsh
-        run: |
-          $exe = Join-Path $env:APP_DIR "dist\JingcaiDesk.exe"
-
-          if (-not (Test-Path $exe)) {
-            throw "JingcaiDesk.exe was not generated"
-          }
-
-          Get-Item $exe |
-            Select-Object Name, Length, FullName
-
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
           name: JingcaiDesk-V2.2-Windows-EXE
           path: '**/dist/JingcaiDesk.exe'
           if-no-files-found: error
-          retention-days: 30
